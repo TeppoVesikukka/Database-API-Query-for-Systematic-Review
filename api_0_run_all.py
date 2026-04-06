@@ -13,6 +13,9 @@ from api_1_ieee import IEEEAPI
 from api_2_springer import SpringerAPI
 from api_3_scopus import ScopusAPI
 from api_4_pubmed import PubMedAPI
+from api_5_semantic_scholar import SemanticScholarAPI
+from api_6_openalex import OpenAlexAPI
+from api_7_crossref import CrossRefAPI
 
 
 # Logger class is used to emit log messages from different threads safely
@@ -80,7 +83,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Multi-API Search Tool")  # Set the window title
-        self.setGeometry(100, 100, 800, 600)  # Set the window size and position
+        self.setGeometry(100, 100, 800, 700)  # Set the window size and position
         self.log_mutex = QMutex()  # Mutex to ensure thread-safe logging
 
         self.logger = Logger()  # Create a Logger instance
@@ -102,6 +105,11 @@ class MainWindow(QMainWindow):
         self.add_api_section("Springer API", "springer_api_key")
         self.add_api_section("Scopus API", "scopus_api_key", include_insttoken=True)
         self.add_api_section("PubMed API", "pubmed_api_key")
+        self.add_api_section("Semantic Scholar API", "semantic_scholar_api_key")
+        self.add_api_section("OpenAlex API", "openalex_email",
+                             placeholder="Enter email address (polite pool)...")
+        self.add_api_section("CrossRef API", "crossref_mailto",
+                             placeholder="Enter email address (polite pool)...")
 
         # Text edit fields for entering initial and secondary search terms
         self.initial_terms_text = QTextEdit()
@@ -140,7 +148,7 @@ class MainWindow(QMainWindow):
         self.api_threads = []  # List to store active API worker threads
         self.searched_terms = []  # List to store terms that have been searched
 
-    def add_api_section(self, api_name, key_name, include_insttoken=False):
+    def add_api_section(self, api_name, key_name, include_insttoken=False, placeholder="Enter API key..."):
         """
         Adds a section in the GUI for an API, including a checkbox, API key input, and optionally an institution token.
 
@@ -148,6 +156,7 @@ class MainWindow(QMainWindow):
         - api_name: Name of the API (e.g., "IEEE API").
         - key_name: The key used to retrieve and save the API key.
         - include_insttoken: Boolean indicating whether to include an institution token input.
+        - placeholder: Placeholder text for the API key input field.
         """
         h_layout = QHBoxLayout()  # Create a horizontal layout for the API section
         checkbox = QCheckBox(api_name)  # Checkbox to enable or disable this API
@@ -155,7 +164,7 @@ class MainWindow(QMainWindow):
         h_layout.addWidget(checkbox)
 
         api_key_input = QLineEdit()  # Input field for the API key
-        api_key_input.setPlaceholderText("Enter API key...")
+        api_key_input.setPlaceholderText(placeholder)
         api_key_input.setText(self.api_keys.get(key_name, ""))  # Load the saved API key if available
         self.api_key_inputs[api_name] = api_key_input  # Store the input field in the dictionary
         h_layout.addWidget(api_key_input)
@@ -183,7 +192,10 @@ class MainWindow(QMainWindow):
             'springer_api_key': self.api_key_inputs["Springer API"].text(),
             'scopus_api_key': self.api_key_inputs["Scopus API"].text(),
             'pubmed_api_key': self.api_key_inputs["PubMed API"].text(),
-            'scopus_insttoken': self.insttoken_input.text() if self.insttoken_input else ""
+            'scopus_insttoken': self.insttoken_input.text() if self.insttoken_input else "",
+            'semantic_scholar_api_key': self.api_key_inputs["Semantic Scholar API"].text(),
+            'openalex_email': self.api_key_inputs["OpenAlex API"].text(),
+            'crossref_mailto': self.api_key_inputs["CrossRef API"].text(),
         }
         with open('api_keys.json', 'w') as file:
             json.dump(api_keys, file)  # Save the API keys to the JSON file
@@ -235,8 +247,16 @@ class MainWindow(QMainWindow):
         if self.api_checkboxes["PubMed API"].isChecked():
             print("*** PubMed started ***")
             self.run_api("PubMed API", PubMedAPI, self.api_key_inputs["PubMed API"].text())
-
-        # self.log_callback("*** Search started.***")  # Log that the search has started
+        if self.api_checkboxes["Semantic Scholar API"].isChecked():
+            print("*** Semantic Scholar started ***")
+            self.run_api("Semantic Scholar API", SemanticScholarAPI,
+                         self.api_key_inputs["Semantic Scholar API"].text())
+        if self.api_checkboxes["OpenAlex API"].isChecked():
+            print("*** OpenAlex started ***")
+            self.run_api("OpenAlex API", OpenAlexAPI, self.api_key_inputs["OpenAlex API"].text())
+        if self.api_checkboxes["CrossRef API"].isChecked():
+            print("*** CrossRef started ***")
+            self.run_api("CrossRef API", CrossRefAPI, self.api_key_inputs["CrossRef API"].text())
 
         for thread in self.api_threads:
             thread.join()  # Wait for all threads to finish
