@@ -1,0 +1,32 @@
+# API keys — NEVER commit
+api_keys.json
+
+# Environment
+.env
+
+# MongoDB data (Docker volume)
+mongodb/
+mongo_dumps/
+
+# Checkpoint files (legacy, no longer used)
+checkpoint_*.json
+
+# Result output files (legacy, results now in MongoDB)
+*_results.json
+combined_api_requests.log
+searched_terms.txt
+
+# Runtime logs
+search.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# IDE
+.idea/

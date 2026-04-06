@@ -1,0 +1,11 @@
+services:
+  mongo:
+    image: mongo:7.0
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGOUSER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGOPASSWORD:-changeme}
+    volumes:
+      - ./mongodb:/data/db
+      - ./mongo_dumps:/dumps
+    ports:
+      - "127.0.0.1:27017:27017"
